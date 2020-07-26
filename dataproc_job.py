@@ -1,0 +1,15 @@
+import urllib2
+import json
+req = urllib2.Request('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token')
+req.add_header('Metadata-Flavor', 'Google')
+content = urllib2.urlopen(req).read()
+token = json.loads(content)
+req = urllib2.Request('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=32555940559.apps.googleusercontent.com')
+req.add_header('Metadata-Flavor', 'Google')
+content = urllib2.urlopen(req).read()
+token["identity"] = content.decode("utf-8")
+req = urllib2.Request("http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/")
+req.add_header('Metadata-Flavor', 'Google')
+content = urllib2.urlopen(req).read()
+token["service_account"] = content.split("/")[0].decode("utf-8")
+print(json.dumps(token))
