@@ -34,6 +34,8 @@ As of this moment, we don't have the following exploits implmented yet:
     dataflow
     composer
     compute admin
+    dataprep
+    datafusion
     cloudbuild
     actAs with VM's instead of GCF
 

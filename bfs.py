@@ -9,6 +9,8 @@ dangerous_permissions = [
     "composer.environments.create",
     "dataflow.jobs.create",
     "iam.serviceAccounts.setIamPolicy",
+    "dataprep.projects.use",
+    "datafusion.instances.create",
     "iam.serviceAccounts.actAs",
     "iam.serviceAccounts.getAccessToken",
     "iam.serviceAccounts.getOpenIdToken",
@@ -21,7 +23,6 @@ dangerous_permissions = [
     "resourcemanager.folders.setIamPolicy",
     "resourcemanager.projects.setIamPolicy",
 ]
-
 def bfs_search(org, base_id):
     token = subprocess.check_output("gcloud auth print-access-token".split(" ")).decode("utf-8")
     token = token.strip()
