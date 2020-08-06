@@ -12,7 +12,16 @@ dangerous_permissions = [
     "dataprep.projects.use",
     "datafusion.instances.create",
     "iam.serviceAccounts.actAs",
-    "iam.serviceAccounts.getAccessToken"
+    "iam.serviceAccounts.getAccessToken",
+    "iam.serviceAccounts.getOpenIdToken",
+    "iam.serviceAccounts.signBlob",
+    "iam.serviceAccounts.signJwt",
+    "iam.serviceAccounts.implicitDelegation",
+    "resourcemanager.projects.setIamPolicy",
+    "resourcemanager.folders.setIamPolicy",
+    "resourcemanager.organizations.setIamPolicy",
+    "resourcemanager.folders.setIamPolicy",
+    "resourcemanager.projects.setIamPolicy",
 ]
 def bfs_search(org, base_id):
     token = subprocess.check_output("gcloud auth print-access-token".split(" ")).decode("utf-8")
@@ -90,7 +99,7 @@ if __name__ == "__main__":
     org_id = args.org
     visited, info = bfs_search(org_id, base_id)
 
-    print("\n\n~~~~~~~{} can move laterally to the follwoing identities~~~~~~~~~~~".format(base_id))
+    print("\n\n~~~~~~~{} can move laterally to the following identities~~~~~~~~~~~".format(base_id))
     for service_account in visited:
         if service_account != base_id:
             print("{} from project {}".format(service_account, info[service_account]))
