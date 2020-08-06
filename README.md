@@ -1,13 +1,13 @@
 # gcploit
 
-This repo has the code for the gcploit exploit framework, the BFS search tool meant for defensive threat models, a mock org simulator, as well as stack driver queries that profile the gcploit tool.
+This repo has the code for the gcploit exploit framework, the BFS search tool meant for defensive threat models, a mock org simulator, as well as stack driver queries that profile the gcploit tool
 
 
 ### BFS Search
 
-To start you'll need the `cloudasset.assets.analyzeIamPolicy` permission at the organization level to use this tool.
+To start you'll need the `cloudasset.assets.analyzeIamPolicy` permission at the org level to use this tool,
 
-Next do a `gcloud auth login` an complete the flow.
+Next do a `gcloud auth login` an complete the flow
 
 Finally run the tool `python bfs.py --org_id <orgId> --start <serviceAccountEmail>`
 
@@ -32,6 +32,8 @@ As of this moment, we don't have the following exploits implmented yet:
     
     tokenCreator
     dataflow
+    dataprep
+    datafusion
     composer
     compute admin
     cloudbuild
@@ -68,7 +70,7 @@ now you can add the --source flag to your exploits and try something like
 
     gcploit --exploit actas --project <new_project_name> --source <8charname> --target_sa all
 
-#### The use of a Proxy
+#### The use of a proxy
 
 Note often times oauth creds are all we get from these exploits, not json creds. To use these we spin up a proxy service in the function and live replace the oauth creds on outbound requests. This was done in a hacky way, and as a result it involves setting a proxy variable and unsetting a proxy variable in your .config. If the tool errors out or is killed mid command it's possible these may persist, and to clean it up you can run:
 
@@ -77,28 +79,7 @@ Note often times oauth creds are all we get from these exploits, not json creds.
     gcloud config unset proxy/address
     gcloud config unset core/custom_ca_certs_file
 
-#### Stack Driver Queries
+#### Stackdriver queries
 
-The following Stack Driver query should give you insight into if this tool is being used against you in your environment:
-
-```text    
-protoPayload.request.function.timeout="539s"
-```
-
-The following examples demonstrate how to query logs using the gcloud CLI tool. 
-https://cloud.google.com/sdk/gcloud/reference/logging/read
-
-Query logs across an organization:
-```bash 
-gcloud logging read $STACK_DRIVER_FILTER --organization=$ORGANIZATION_ID --format json
-```
-
-Query logs in a specific folder: 
-```bash 
-gcloud logging read $STACK_DRIVER_FILTER --folder=$FOLDER_ID --format json
-```
-
-Query logs in a specific project:
-```bash 
-gcloud logging read $STACK_DRIVER_FILTER --project=$PROJECT_ID --format json
-```
+The following stack driver query should give you insight into if this tool is being used against you in your environment:
+    protoPayload.request.function.timeout="541s"
