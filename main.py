@@ -130,7 +130,7 @@ def run_cmd_on_source(name, cmd, project=None):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='gsploit, tools to exploit GCP.')
+    parser = argparse.ArgumentParser(description='gsploit, tools to exploit GCP services')
     parser.add_argument('--source_cf', dest="source",
                     help='The source you want to run the command or exploit from')
     parser.add_argument('--target_sa', dest="target",
@@ -142,7 +142,7 @@ def main():
     parser.add_argument('--list', dest='list', action="store_true",
                     help='lists all compromised identities')
     parser.add_argument('--exploit', dest='exploit',
-                    help='the name of the exploit you want to run on the given target, e.g. actas all')
+                    help='the name of the exploit you want to run on the given target, e.g. actAs all')
 
     args = parser.parse_args()
 
