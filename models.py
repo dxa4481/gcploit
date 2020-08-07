@@ -22,7 +22,7 @@ class CloudFunction(Base):
     def __repr__(self):
         return "name='%s', role='%s', serviceAccount='%s', project='%s', password='%s'" % (
             self.name, self.role, self.serviceAccount, self.project, self.evilPassword)
-    def refresh_cred(self, db_session, run_local, dataproc):
+    def refresh_cred(self, db_session, run_local, dataproc=None):
         if self.infastructure == "cloud_function":
             print(self.serviceAccount)
             print("refreshing cred")
