@@ -35,6 +35,7 @@ As of this moment, we don't have the following exploits implmented yet:
     composer
     compute admin
     dataprep
+    google managed service account privesc (ie cloudbuild)
     datafusion
     cloudbuild
     actAs with VM's instead of GCF
