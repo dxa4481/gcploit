@@ -10,6 +10,7 @@ dangerous_permissions = [
     "dataflow.jobs.create",
     "iam.serviceAccounts.setIamPolicy",
     "dataprep.projects.use",
+    "deploymentmanager.deployments.create",
     "datafusion.instances.create",
     "iam.serviceAccounts.actAs",
     "iam.serviceAccounts.getAccessToken",
