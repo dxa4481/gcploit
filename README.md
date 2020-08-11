@@ -2,6 +2,7 @@
 
 This repo has the code for the gcploit exploit framework, the BFS search tool meant for defensive threat models, a mock org simulator, as well as stack driver queries that profile the gcploit tool.
 
+If you haven't seen our talk yet, it's available here [https://www.youtube.com/watch?v=Ml09R38jpok](https://www.youtube.com/watch?v=Ml09R38jpok)
 
 ### BFS Search
 
