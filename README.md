@@ -9,7 +9,7 @@ To start you'll need the `cloudasset.assets.analyzeIamPolicy` permission at the 
 
 Next do a `gcloud auth login` an complete the flow.
 
-Finally run the tool `python bfs.py --org_id <orgId> --start <serviceAccountEmail>`
+Finally run the tool `python bfs.py --org_id <orgId> --source <serviceAccountEmail>`
 
 This will print the results of the BFS from your starting service account inside your org
 
