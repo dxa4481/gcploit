@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if not args.source:
-        print("Need the starting point --start <serviceAccountEmail>")
+        print("Need the starting point --source <serviceAccountEmail>")
         sys.exit()
     elif not args.org:
         print("Need the org ID --org_id <org_id>")
