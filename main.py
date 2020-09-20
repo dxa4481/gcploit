@@ -251,7 +251,9 @@ def main():
         exploit_cmd = args.exploit
         if exploit_cmd == "actas":
             if args.bucket:
-                print("MAKE SURE YOU GIVE ALL USERS *WRITE* ACCESS TO YOUR BUCKET WITH gsutil iam ch <serviceAccountName>:objectCreator gs://{}".format(args.bucket))
+                print("*************************************************")
+                print("MAKE SURE YOU GIVE ALL USERS *WRITE* ACCESS TO YOUR BUCKET WITH gsutil iam ch <serviceAccountName>:objectCreator gs://{}. OTHERWISE, YOUR SCRIPTS WONT BE ABLE TO PUSH CREDS TO YOU.".format(args.bucket))
+                print("*************************************************")
 
             if (args.actasmethod == "notebook" or
                     args.actasmethod == "vm") and not args.bucket:
