@@ -62,7 +62,7 @@ class CloudObject(Base):
             else:
                 creator = db_session.query(CloudObject).filter_by(serviceAccount=self.creator_email).first()
                 return dataproc(source_name=creator.name, project=self.project, refresh=self)
-        elif self.infastructure == "compute_instance" or self.infrastructure == "notebook":
+        elif self.infastructure == "compute_instance" or self.infastructure == "notebook":
             # Pull credentials from GCS
             blob = self.client.bucket(bucket_name).blob(self.serviceAccount).download_to_filename("/tmp/gcploit_temporary_credentials")
             self.cred = open("/tmp/gcploit_temporary_credentials").read()
