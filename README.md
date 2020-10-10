@@ -28,6 +28,7 @@ These include:
 
     actAs
     dataproc
+    actAs with VM's instead of GCF
 
 As of this moment, we don't have the following exploits implmented yet:
     
@@ -39,7 +40,6 @@ As of this moment, we don't have the following exploits implmented yet:
     google managed service account privesc (ie cloudbuild)
     datafusion
     cloudbuild
-    actAs with VM's instead of GCF
 
 To use the tool, docker is required.
 
