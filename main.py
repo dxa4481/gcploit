@@ -126,12 +126,12 @@ def deploy_pipeline(project, source=None, target=None, bucket=None, role="unknow
         creator_email = ""
     else:
         source = db_session.query(models.CloudObject).filter_by(name=source).first()
-        source.refresh_cred(db_session, utils.run_gcloud_command_local, dataproc=dataproc, bucket_name=bucket)
+        source.refresh_cred(db_session, utils.run_gcloud_command_local, dataproc=dataproc, bucket_name=bucket, bucket_proj=bucketproj)
         caller_identity = source.identity
         token = source.cred
         proc = activate_sketch_proxy(token)
         utils.run_gcloud_command_local("gcloud services enable cloudresourcemanager.googleapis.com")
-        success = base_dataflow.create_pipeline_in_another_project(project, target, instance_props, bucket)
+        success = base_dataflow.create_pipeline_in_another_project(project, target, instance_props, bucket, bucket_proj)
         deactivate_sketch_proxy(proc)
         if not success or success == "False":
             print("Failed to provision dataflow pipeline")
