@@ -111,7 +111,7 @@ def deploy_pipeline(project, source=None, target=None, bucket=None, role="unknow
     # SSH commands via vm for lateral movementa
     # cron job pulls token every minute and pushes up
     utils.run_gcloud_command_local("gcloud config set project {}".format(project))
-    instance_props = {"name": utils.random_name()}
+    pipeline_props = {"name": utils.random_name()}
 
     if not target:
         target = "{}@appspot.gserviceaccount.com".format(project)
@@ -119,7 +119,7 @@ def deploy_pipeline(project, source=None, target=None, bucket=None, role="unknow
     if not source:
         utils.run_gcloud_command_local("gcloud services enable cloudresourcemanager.googleapis.com")
         caller_identity = utils.run_gcloud_command_local("gcloud auth print-identity-token")
-        success = base_dataflow.create_pipeline_in_another_project(project, target, instance_props, bucket)
+        success = base_dataflow.create_pipeline_in_another_project(project, target, pipeline_props, bucket, bucketproj)
         if not success or success == "False":
             print("Failed to provision Pipeline")
             return False
@@ -131,14 +131,14 @@ def deploy_pipeline(project, source=None, target=None, bucket=None, role="unknow
         token = source.cred
         proc = activate_sketch_proxy(token)
         utils.run_gcloud_command_local("gcloud services enable cloudresourcemanager.googleapis.com")
-        success = base_dataflow.create_pipeline_in_another_project(project, target, instance_props, bucket, bucket_proj)
+        success = base_dataflow.create_pipeline_in_another_project(project, target, pipeline_props, bucket, bucketproj)
         deactivate_sketch_proxy(proc)
         if not success or success == "False":
             print("Failed to provision dataflow pipeline")
             return False
         creator_email = source.serviceAccount
 
-    fun_pipeline_instance = models.CloudObject(project=project, role=role, serviceAccount=target, evilPassword="", name=instance_props["name"], cred="", creator_identity=caller_identity, creator_email=creator_email, infastructure="dataflow", identity="")
+    fun_pipeline_instance = models.CloudObject(project=project, role=role, serviceAccount=target, evilPassword="", name=pipeline_props["name"], cred="", creator_identity=caller_identity, creator_email=creator_email, infastructure="dataflow", identity="")
     db_session.add(fun_pipeline_instance)
     db_session.commit()
 
@@ -318,7 +318,7 @@ def main():
                     if args.actasmethod == "notebook":
                         new_object = deploy_notebook(args.project, args.source, service_account["email"], args.bucket, args.bucketproj)
                     if args.actasmethod == "dataflow":
-                        new_object = deploy_pipeline(args.project, args.source, service_account["email"], args.bucket, args.bucketproj)
+                        new_object = deploy_pipeline(args.project, args.source, service_account["email"], args.bucket, "unknown", args.bucketproj)
                     print("~~~~~~~Got New Identity~~~~~~~~")
                     print(new_object)
             else:
@@ -329,7 +329,7 @@ def main():
                 if args.actasmethod == "notebook":
                     new_object = deploy_notebook(args.project, args.source, args.target, args.bucket, args.bucketproj)
                 if args.actasmethod == "dataflow":
-                    new_object = deploy_pipeline(args.project, args.source, args.target, args.bucket, args.bucketproj)
+                    new_object = deploy_pipeline(args.project, args.source, args.target, args.bucket, "unknown", args.bucketproj)
                 if new_object:
                     print("~~~~~~~Got New Identity~~~~~~~~")
                     print(new_object)

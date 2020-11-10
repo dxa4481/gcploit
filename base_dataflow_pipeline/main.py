@@ -5,6 +5,7 @@ import io
 import string
 import json
 import os
+import sys
 from urllib.request import Request, urlopen
 from base64 import b64decode, b64encode
 
@@ -14,10 +15,11 @@ from base_dataflow_pipeline import dataflowjob
 def build_and_push_image(name, bucket_proj):
     print("Building payload Docker image")
 
-    image = f"gcr.io/{bucket_proj}/{name}:1.0"
+    image = f"gcr.io/{bucket_proj}/interestingimage:1.0"
+    print(image)
 
     client = docker.from_env()
-    client.images.build(fileobj="base_dataflow_pipeline/Dockerfile",tag=image)
+    client.images.build(path="utils",tag=image)
     client.images.push(image)
 
     return image
@@ -26,13 +28,18 @@ def create_pipeline_in_another_project(dest_project, dest_sa, instance_props, bu
     utils.run_gcloud_command_local("gcloud config set project {}".format(dest_project))
 
     # Build the Image
-    image_name = build_and_push_image(bucket_proj)
-    dataflowjob.start_job(dest_project, instance_props["name"], bucket_name, image)
+    image_name = build_and_push_image(instance_props["name"], bucket_proj)
+
+    suceeded = False
+    try:
+        dataflowjob.start_job(dest_project, instance_props["name"], bucket_name, image_name, dest_sa)
+    except KeyboardInterrupt:
+        # This occurs after timeout from decorator
+        succeeded = True
 
     # push via a startup script into a user-provided GCS bucket. Ask user to give access to the bucket  first.
-    succeeded = utils.run_gcloud_command_local("gcloud dataflow jobs run {} --service-account-email {} --worker-zone=us-central1-a --parameters=[output={},runner='DataflowRunner',project={}]".format(instance_props["name"], dest_sa, bucket_name, dest_project))
     print("~~~~~~~~~~ {} ~~~~~~~~~~".format(succeeded))
-    if not succeeded and succeeded != "0" and succeeded != 0:
+    if not succeeded:
         print("gcp dataflow pipeline provisioning failed")
         return False
     return instance_props
