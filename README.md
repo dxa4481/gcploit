@@ -29,13 +29,13 @@ These include:
     actAs
     dataproc
     actAs with VM's instead of GCF
+    compute admin
+    dataflow
 
 As of this moment, we don't have the following exploits implmented yet:
     
     tokenCreator
-    dataflow
     composer
-    compute admin
     dataprep
     google managed service account privesc (ie cloudbuild)
     datafusion

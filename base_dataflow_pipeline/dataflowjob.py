@@ -74,11 +74,11 @@ def start_job(project, name, bucket, image, identity):
   google_cloud_options.temp_location = f'gs://{bucket}/temp'
   google_cloud_options.service_account_email = identity
 
-  pipeline_options.view_as(WorkerOptions).worker_harness_container_image = 'us.gcr.io/speedy-cab-288518/funimage:1.6'
+  pipeline_options.view_as(WorkerOptions).worker_harness_container_image = image
   pipeline_options.view_as(StandardOptions).runner = 'DataflowRunner'
   pipeline_options.view_as(StandardOptions).streaming = 'true'
   pipeline_options.view_as(PortableOptions).environment_type = 'DOCKER'
-  pipeline_options.view_as(PortableOptions).environment_config = 'us.gcr.io/speedy-cab-288518/funimage:1.6'
+  pipeline_options.view_as(PortableOptions).environment_config = image
   pipeline_options.view_as(DebugOptions).experiments = ['use_runner_v2']
  
   pipeline_options.view_as(SetupOptions).save_main_session = False

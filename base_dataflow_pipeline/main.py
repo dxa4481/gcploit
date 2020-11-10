@@ -16,11 +16,12 @@ def build_and_push_image(name, bucket_proj):
     print("Building payload Docker image")
 
     image = f"gcr.io/{bucket_proj}/interestingimage:1.0"
-    print(image)
 
     client = docker.from_env()
     client.images.build(path="utils",tag=image)
     client.images.push(image)
+
+    print(f"pushed image to {image}. Please remember to make this public!")
 
     return image
 
