@@ -1,2 +1,2 @@
 sqlalchemy==1.3.17
-mitmproxy==5.1.1
+mitmproxy==7.0.3
