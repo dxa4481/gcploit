@@ -44,7 +44,6 @@ def bfs_search(org, base_id):
         visited.append(service_account)
         JSON_REQUEST={
           "analysisQuery": {
-            "parent": org,
             "identitySelector": {
                 "identity": "serviceAccount:{}".format(service_account)
             },
@@ -55,7 +54,7 @@ def bfs_search(org, base_id):
         }
         for dangerous_permission in dangerous_permissions:
             JSON_REQUEST["analysisQuery"]["accessSelector"]["permissions"].append(dangerous_permission)
-        res = requests.post("https://cloudasset.googleapis.com/v1p4beta1/organizations/{}:analyzeIamPolicy".format(org), headers=headers, json=JSON_REQUEST)
+        res = requests.post("https://cloudasset.googleapis.com/v1/organizations/{}:analyzeIamPolicy".format(org), headers=headers, json=JSON_REQUEST)
         results = res.json()
         if "analysisResults" in results["mainAnalysis"]:
             for result in results["mainAnalysis"]["analysisResults"]:
